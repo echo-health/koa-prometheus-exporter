@@ -1,0 +1,16 @@
+version: '2'
+
+services:
+
+  koa-prometheus-exporter:
+    build: .
+    volumes:
+      - ./src:/echo/src
+      - ./scripts:/echo/scripts
+      - ./package.json:/echo/package.json
+      - ./yarn.lock:/echo/yarn.lock
+      - ./.eslintrc.js:/echo/.eslintrc.js
+      - ./.eslintignore:/echo/.eslintignore
+      - ./coverage:/echo/coverage
+    environment:
+      - DEBUG=koa-prometheus-exporter*

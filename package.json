@@ -1,0 +1,43 @@
+{
+  "name": "koa-prometheus-exporter",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "jest --env node",
+    "lint": "eslint .",
+    "postinstall": "nsp check",
+    "format": "prettier --write 'src/**/*.js'",
+    "format:check": "prettier --list-different 'src/**/*.js'"
+  },
+  "private": true,
+  "jest": {
+    "collectCoverage": true,
+    "collectCoverageFrom": [
+      "src/**/*.js"
+    ],
+    "coverageReporters": [
+      "json",
+      "lcov",
+      "text-summary"
+    ]
+  },
+  "prettier": {
+    "trailingComma": "es5",
+    "singleQuote": true,
+    "tabWidth": 4
+  },
+  "dependencies": {
+    "debug": "3.1.0",
+    "nsp": "2.8.0",
+    "prom-client": "^10.1.1",
+    "prometheus-gc-stats": "^0.5.0"
+  },
+  "devDependencies": {
+    "eslint": "4.7.1",
+    "eslint-config-airbnb-base": "12.0.0",
+    "eslint-config-prettier": "2.5.0",
+    "eslint-plugin-import": "2.7.0",
+    "jest": "21.1.0",
+    "prettier": "1.7.0"
+  }
+}

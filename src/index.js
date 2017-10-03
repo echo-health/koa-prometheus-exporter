@@ -7,7 +7,7 @@ client.collectDefaultMetrics();
 module.exports = {
     client,
     middleware: async (ctx, next) => {
-        ctx.monitoring = client;
+        ctx.state.prometheus = client;
         if (ctx.path === '/metrics') {
             debug('GET /metrics');
             if (!ctx.headers["x-forwarded-for"]) {

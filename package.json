@@ -1,7 +1,11 @@
 {
-  "name": "koa-prometheus-exporter",
-  "version": "1.0.0",
+  "name": "@echo-health/koa-prometheus-exporter",
+  "version": "0.0.2",
   "main": "src/index.js",
+  "license": "MIT",
+  "engines": {
+    "node": ">=6.10.2"
+  },
   "scripts": {
     "test": "jest --env node",
     "lint": "eslint .",
@@ -9,7 +13,6 @@
     "format": "prettier --write 'src/**/*.js'",
     "format:check": "prettier --list-different 'src/**/*.js'"
   },
-  "private": true,
   "jest": {
     "collectCoverage": true,
     "collectCoverageFrom": [
@@ -39,5 +42,16 @@
     "eslint-plugin-import": "2.7.0",
     "jest": "21.1.0",
     "prettier": "1.7.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:echo-health/koa-prometheus-exporter.git"
+  },
+  "author": "Echo",
+  "contributors": [
+    {
+      "name": "Ryan McGrath",
+      "email": "ryan.mcgrath@echo.co.uk"
+    }
+  ]
 }

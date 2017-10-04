@@ -5,8 +5,16 @@
 
 Requires koa to run
 
+Using npm:
+
 ```
-$ npm install koa-prometheus-exporter
+$ npm install @echo-health/koa-prometheus-exporter
+```
+
+Using yarn:
+
+```
+$ yarn add @echo-health/koa-prometheus-exporter
 ```
 
 To use the prometheus middlware the module exports a async middleware function called `middleware`

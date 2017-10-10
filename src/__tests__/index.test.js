@@ -100,3 +100,29 @@ test('Should deny direct connections to /metrics with blacklisted header', async
         expect(err.message).toBe('Forbidden');
     }
 });
+
+test('Should track HTTP metrics as a Prometheus histogram', async () => {
+    const next = jest.fn();
+    const path = '/test';
+    await prometheus.httpMetricMiddleware(
+        {
+            request: {
+                path,
+                method: 'get',
+            },
+            response: {
+                status: 200,
+            },
+            state: {},
+            path,
+        },
+        next
+    );
+    const metric = prometheus.client.register.getSingleMetric(
+        'http_request_duration_ms'
+    );
+    const metrics = Object.keys(metric.hashMap);
+    expect(metric).toBeInstanceOf(prometheus.client.Histogram);
+    expect(metrics.length).toBe(1);
+    expect(metrics[0]).toBe('code:200,method:get,route:/test');
+});

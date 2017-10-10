@@ -43,4 +43,23 @@ app.use(async (ctx, next) => {
 })
 ```
 
+##Tracking HTTP Metrics
 
+If you would like to track HTTP metrics you can add an additional piece of middleware via.
+
+```
+const Koa = require('koa');
+const prometheus = require('koa-prometheus-exporter');
+const httpMetrics = prometheus.httpMetricMiddleware;
+const app = new Koa();
+
+// this has to be before any other middleware if you want accurate timing of request duration.
+app.use(httpMetrics);
+app.use(prometheus.middleware);
+```
+
+This exposes a prometheus Histogram metric called `http_request_duration_ms` which has the following bucket settings.
+
+`[0.1, 5, 15, 50, 100, 200, 300, 400, 500]`
+
+These are thresholds to collect on based on time in milliseconds. This will allow you to set thresholds to alarm on via the alert manager.

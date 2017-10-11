@@ -65,15 +65,27 @@ module.exports = {
     httpMetricMiddleware: async (ctx, next) => {
         const startEpoch = getMicroseconds();
         await next();
-        httpRequestSizeBytes
-            .labels(ctx.request.method, ctx.request.path, ctx.response.status)
-            .observe(ctx.request.length);
+        if (ctx.request.length) {
+            httpRequestSizeBytes
+                .labels(
+                    ctx.request.method,
+                    ctx.request.path,
+                    ctx.response.status
+                )
+                .observe(ctx.request.length);
+        }
+        if (ctx.response.length) {
+            httpResponseSizeBytes
+                .labels(
+                    ctx.request.method,
+                    ctx.request.path,
+                    ctx.response.status
+                )
+                .observe(ctx.response.length);
+        }
         httpRequestDurationMicroseconds
             .labels(ctx.request.method, ctx.request.path, ctx.response.status)
             .observe(getMicroseconds() - startEpoch);
-        httpResponseSizeBytes
-            .labels(ctx.request.method, ctx.request.path, ctx.response.status)
-            .observe(ctx.response.length);
         httpRequestsTotal
             .labels(ctx.request.method, ctx.request.path, ctx.response.status)
             .inc();

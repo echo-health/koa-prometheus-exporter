@@ -4,12 +4,35 @@ require('prometheus-gc-stats')(client.register)();
 
 client.collectDefaultMetrics();
 // setup metrics.
-const httpRequestDurationMicroseconds = new client.Histogram({
-    name: 'http_request_duration_ms',
-    help: 'Duration of HTTP requests in ms',
-    labelNames: ['method', 'route', 'code'],
-    buckets: [0.1, 5, 15, 50, 100, 200, 300, 400, 500],
+const labelNames = ['method', 'handler', 'code'];
+const httpRequestsTotal = new client.Counter({
+    labelNames,
+    name: 'http_requests_total',
+    help: 'Total number of HTTP requests',
 });
+
+const httpRequestDurationMicroseconds = new client.Summary({
+    labelNames,
+    name: 'http_request_duration_microseconds',
+    help: 'Duration of HTTP requests in microseconds',
+});
+
+const httpRequestSizeBytes = new client.Summary({
+    labelNames,
+    name: 'http_request_size_bytes',
+    help: 'Duration of HTTP requests size in bytes',
+});
+
+const httpResponseSizeBytes = new client.Summary({
+    labelNames,
+    name: 'http_response_size_bytes',
+    help: 'Duration of HTTP response size in bytes',
+});
+
+function getMicroseconds() {
+    const now = process.hrtime();
+    return now[0] * 1000000 + now[1] / 1000;
+}
 
 module.exports = {
     client,
@@ -40,10 +63,19 @@ module.exports = {
         };
     },
     httpMetricMiddleware: async (ctx, next) => {
-        const startEpoch = Date.now();
+        const startEpoch = getMicroseconds();
         await next();
+        httpRequestSizeBytes
+            .labels(ctx.request.method, ctx.request.path, ctx.response.status)
+            .observe(ctx.request.length);
         httpRequestDurationMicroseconds
             .labels(ctx.request.method, ctx.request.path, ctx.response.status)
-            .observe(Date.now() - startEpoch);
+            .observe(getMicroseconds() - startEpoch);
+        httpResponseSizeBytes
+            .labels(ctx.request.method, ctx.request.path, ctx.response.status)
+            .observe(ctx.response.length);
+        httpRequestsTotal
+            .labels(ctx.request.method, ctx.request.path, ctx.response.status)
+            .inc();
     },
 };

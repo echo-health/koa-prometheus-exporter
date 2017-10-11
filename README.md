@@ -84,8 +84,15 @@ app.use(httpMetrics);
 app.use(prometheus.middleware());
 ```
 
-This exposes a prometheus Histogram metric called `http_request_duration_ms` which has the following bucket settings.
+This exposes four metrics: 
 
-`[0.1, 5, 15, 50, 100, 200, 300, 400, 500]`
+     - name: http_request_duration_microseconds
+       type: Summary
+     - name: http_request_size_bytes
+       type: Summary
+     - name: http_response_size_bytes
+       type: Summary
+     - name: http_requests_total
+       type: Counter
 
-These are thresholds to collect on based on time in milliseconds. This will allow you to set thresholds to alarm on via the alert manager.
+These mirror the same HTTP metrics exported by the prometheus server itself.

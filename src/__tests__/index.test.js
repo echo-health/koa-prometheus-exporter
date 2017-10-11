@@ -109,20 +109,28 @@ test('Should track HTTP metrics as a Prometheus histogram', async () => {
             request: {
                 path,
                 method: 'get',
+                length: 1000,
             },
             response: {
                 status: 200,
+                length: 1000,
             },
             state: {},
             path,
         },
         next
     );
-    const metric = prometheus.client.register.getSingleMetric(
-        'http_request_duration_ms'
-    );
-    const metrics = Object.keys(metric.hashMap);
-    expect(metric).toBeInstanceOf(prometheus.client.Histogram);
-    expect(metrics.length).toBe(1);
-    expect(metrics[0]).toBe('code:200,method:get,route:/test');
+    const metricsToExist = {
+        http_request_duration_microseconds: prometheus.client.Summary,
+        http_request_size_bytes: prometheus.client.Summary,
+        http_response_size_bytes: prometheus.client.Summary,
+        http_requests_total: prometheus.client.Counter,
+    };
+    Object.keys(metricsToExist).forEach(k => {
+        const metric = prometheus.client.register.getSingleMetric(k);
+        const metrics = Object.keys(metric.hashMap);
+        expect(metric).toBeInstanceOf(metricsToExist[k]);
+        expect(metrics.length).toBe(1);
+        expect(metrics[0]).toBe('code:200,handler:/test,method:get');
+    });
 });

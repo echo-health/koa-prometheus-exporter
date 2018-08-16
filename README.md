@@ -11,12 +11,6 @@ Using npm
 npm install @echo-health/koa-prometheus-exporter
 ```
 
-Using yarn
-
-```
-yarn add @echo-health/koa-prometheus-exporter
-```
-
 To use the prometheus middlware the module exports a async middleware function called `middleware`
 
 e.g.
@@ -32,7 +26,7 @@ const app = new Koa();
 app.use(prometheus.middleware({}));
 ```
 
-Options can be passed into the middlware.
+Options can be passed into the middleware.
 
 ```
 Name: path
@@ -76,13 +70,47 @@ If you would like to track HTTP metrics you can add an additional piece of middl
 ```
 const Koa = require('koa');
 const prometheus = require('koa-prometheus-exporter');
-const httpMetrics = prometheus.httpMetricMiddleware;
 const app = new Koa();
 
 // this has to be before any other middleware if you want accurate timing of request duration.
-app.use(httpMetrics);
+app.use(prometheus.httpMetricMiddleware());
 app.use(prometheus.middleware());
 ```
+###Options can be passed into the middleware
+```
+Name: httpTimingDisable
+Type: Boolean
+Desciption: turns off tracking HTTP timing information, histograms are expensive and can produce a lot of data.
+e.g. true
+
+Name: httpTimingBuckets: 
+Type: Array
+Description: Override the histogram buckets used to track quantiles, this is so you can specify your own bucket configuration. 
+Defaault: array produced by calling require('prom-client').exponentialBuckets(0.05, 1.3, 20)
+e.g. [
+  0.05,
+  0.065,
+  0.0845,
+  0.10985000000000002,
+  0.14280500000000002,
+  0.18564650000000002,
+  0.24134045000000004,
+  0.3137425850000001,
+  0.4078653605000001,
+  0.5302249686500001,
+  0.6892924592450002,
+  0.8960801970185003,
+  1.1649042561240504,
+  1.5143755329612656,
+  1.9686881928496454,
+  2.559294650704539,
+  3.327083045915901,
+  4.325207959690672,
+  5.622770347597873,
+  7.309601451877235
+]
+```
+
 
 This exposes four metrics: 
 

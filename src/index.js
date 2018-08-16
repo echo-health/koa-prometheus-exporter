@@ -3,66 +3,82 @@ const debug = require('debug')('prometheus:middleware');
 require('prometheus-gc-stats')(client.register)();
 
 client.collectDefaultMetrics();
-// setup metrics.
-const labelNames = ['method', 'handler', 'code'];
-const httpRequestsTotal = new client.Counter({
-    labelNames,
-    name: 'http_requests_total',
-    help: 'Total number of HTTP requests',
-});
-
-const httpRequestDurationMicroseconds = new client.Summary({
-    labelNames,
-    name: 'http_request_duration_microseconds',
-    help: 'Duration of HTTP requests in microseconds',
-});
-
-const httpRequestSizeBytes = new client.Summary({
-    labelNames,
-    name: 'http_request_size_bytes',
-    help: 'Duration of HTTP requests size in bytes',
-});
-
-const httpResponseSizeBytes = new client.Summary({
-    labelNames,
-    name: 'http_response_size_bytes',
-    help: 'Duration of HTTP response size in bytes',
-});
 
 function getMicroseconds() {
     const now = process.hrtime();
     return now[0] * 1000000 + now[1] / 1000;
 }
 
-module.exports = {
-    client,
-    middleware: (options = {}) => {
-        const path = options.path || '/metrics';
-        const { headerBlacklist } = options;
-        return async (ctx, next) => {
-            ctx.state.prometheus = client;
-            if (ctx.path === path) {
-                if (ctx.method.toLowerCase() === 'get') {
-                    debug('GET /%s', path);
-                    if (
-                        !headerBlacklist ||
-                        headerBlacklist.filter(h => {
-                            return Object.keys(ctx.headers).includes(h);
-                        }).length === 0
-                    ) {
-                        ctx.set('Content-Type', client.register.contentType);
-                        ctx.body = client.register.metrics();
-                        return null;
-                    }
+function httpTimingEnabled(options) {
+    return !options.httpTimingDisable || options.httpTimingDisable === false;
+}
+
+function getBuckets(options) {
+    if (options.httpTimingBuckets) {
+        return options.httpTimingBuckets;
+    }
+    return client.exponentialBuckets(0.05, 1.3, 20);
+}
+
+function prometheusMetricsExporterWrapper(options = {}) {
+    const path = options.path || '/metrics';
+    const { headerBlacklist } = options;
+    return async function prometheusMetricsExporter(ctx, next) {
+        ctx.state.prometheus = client;
+        if (ctx.path === path) {
+            if (ctx.method.toLowerCase() === 'get') {
+                debug('GET /%s', path);
+                if (
+                    !headerBlacklist ||
+                    headerBlacklist.filter(h => {
+                        return Object.keys(ctx.headers).includes(h);
+                    }).length === 0
+                ) {
+                    ctx.set('Content-Type', client.register.contentType);
+                    ctx.body = client.register.metrics();
+                } else {
                     ctx.throw(403, 'Forbidden');
                 }
-                ctx.throw(405, 'Method not allowed');
             } else {
-                await next();
+                ctx.throw(403, 'Method not allowed');
             }
-        };
-    },
-    httpMetricMiddleware: async (ctx, next) => {
+        } else {
+            await next();
+        }
+    };
+}
+
+function httpMetricMiddlewareWrapper(options = {}) {
+    // setup metrics.
+    const labelNames = ['method', 'uri', 'code'];
+    const httpRequestsTotal = new client.Counter({
+        labelNames,
+        name: 'http_requests_total',
+        help: 'Total number of HTTP requests',
+    });
+
+    let httpServerRequestsSeconds;
+    if (httpTimingEnabled(options)) {
+        httpServerRequestsSeconds = new client.Histogram({
+            labelNames: ['method', 'uri', 'code'],
+            name: 'http_server_requests_seconds',
+            help: 'Duration of HTTP requests in seconds',
+            buckets: getBuckets(options),
+        });
+    }
+
+    const httpRequestSizeBytes = new client.Summary({
+        labelNames,
+        name: 'http_request_size_bytes',
+        help: 'Duration of HTTP requests size in bytes',
+    });
+
+    const httpResponseSizeBytes = new client.Summary({
+        labelNames,
+        name: 'http_response_size_bytes',
+        help: 'Duration of HTTP response size in bytes',
+    });
+    return async function httpMetricMiddleware(ctx, next) {
         const startEpoch = getMicroseconds();
         await next();
         if (ctx.request.length) {
@@ -83,11 +99,23 @@ module.exports = {
                 )
                 .observe(ctx.response.length);
         }
-        httpRequestDurationMicroseconds
-            .labels(ctx.request.method, ctx.request.path, ctx.response.status)
-            .observe(getMicroseconds() - startEpoch);
+        if (httpTimingEnabled(options)) {
+            httpServerRequestsSeconds
+                .labels(
+                    ctx.request.method,
+                    ctx.request.path,
+                    ctx.response.status
+                )
+                .observe((getMicroseconds() - startEpoch) / 1000000);
+        }
         httpRequestsTotal
             .labels(ctx.request.method, ctx.request.path, ctx.response.status)
             .inc();
-    },
+    };
+}
+
+module.exports = {
+    client,
+    httpMetricMiddleware: httpMetricMiddlewareWrapper,
+    middleware: prometheusMetricsExporterWrapper,
 };

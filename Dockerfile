@@ -1,12 +1,12 @@
-FROM node:8.4.0
+FROM node:8.11.4
 
 RUN mkdir /echo
 
 WORKDIR /echo/
 
 ADD package.json /echo/package.json
-ADD yarn.lock /echo/yarn.lock
-RUN yarn global add node-gyp && yarn install --frozen-lockfile
+ADD package-lock.json /echo/package-lock.json
+RUN npm install -g node-gyp && npm install
 
 ADD src /echo/src
 ADD scripts /echo/scripts

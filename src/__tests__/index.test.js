@@ -2,6 +2,7 @@ const prometheus = require('../index');
 
 test("Should block any request that isn't a GET", async () => {
     expect.assertions(1);
+    const next = jest.fn();
     try {
         await prometheus.middleware()(
             {
@@ -13,7 +14,7 @@ test("Should block any request that isn't a GET", async () => {
                     throw new Error(message);
                 },
             },
-            null
+            next
         );
     } catch (err) {
         expect(err.message).toBe('Method not allowed');
@@ -104,7 +105,7 @@ test('Should deny direct connections to /metrics with blacklisted header', async
 test('Should track HTTP metrics as a Prometheus histogram', async () => {
     const next = jest.fn();
     const path = '/test';
-    await prometheus.httpMetricMiddleware(
+    await prometheus.httpMetricMiddleware()(
         {
             request: {
                 path,
@@ -121,7 +122,7 @@ test('Should track HTTP metrics as a Prometheus histogram', async () => {
         next
     );
     const metricsToExist = {
-        http_request_duration_microseconds: prometheus.client.Summary,
+        http_server_requests_seconds: prometheus.client.Histogram,
         http_request_size_bytes: prometheus.client.Summary,
         http_response_size_bytes: prometheus.client.Summary,
         http_requests_total: prometheus.client.Counter,
@@ -131,6 +132,6 @@ test('Should track HTTP metrics as a Prometheus histogram', async () => {
         const metrics = Object.keys(metric.hashMap);
         expect(metric).toBeInstanceOf(metricsToExist[k]);
         expect(metrics.length).toBe(1);
-        expect(metrics[0]).toBe('code:200,handler:/test,method:get');
+        expect(metrics[0]).toBe('code:200,method:get,uri:/test');
     });
 });

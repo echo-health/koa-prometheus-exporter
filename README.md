@@ -114,8 +114,8 @@ e.g. [
 
 This exposes four metrics: 
 
-     - name: http_request_duration_microseconds
-       type: Summary
+     - name: http_server_requests_seconds
+       type: Histogram
      - name: http_request_size_bytes
        type: Summary
      - name: http_response_size_bytes

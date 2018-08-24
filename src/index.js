@@ -78,38 +78,34 @@ function httpMetricMiddlewareWrapper(options = {}) {
         name: 'http_response_size_bytes',
         help: 'Duration of HTTP response size in bytes',
     });
+
+    let pathTransformFunction = path => {
+        return path;
+    };
+    if (options.pathTransform) {
+        pathTransformFunction = options.pathTransform;
+    }
     return async function httpMetricMiddleware(ctx, next) {
         const startEpoch = getMicroseconds();
         await next();
+        const path = pathTransformFunction(ctx.request.path);
         if (ctx.request.length) {
             httpRequestSizeBytes
-                .labels(
-                    ctx.request.method,
-                    ctx.request.path,
-                    ctx.response.status
-                )
+                .labels(ctx.request.method, path, ctx.response.status)
                 .observe(ctx.request.length);
         }
         if (ctx.response.length) {
             httpResponseSizeBytes
-                .labels(
-                    ctx.request.method,
-                    ctx.request.path,
-                    ctx.response.status
-                )
+                .labels(ctx.request.method, path, ctx.response.status)
                 .observe(ctx.response.length);
         }
         if (httpTimingEnabled(options)) {
             httpServerRequestsSeconds
-                .labels(
-                    ctx.request.method,
-                    ctx.request.path,
-                    ctx.response.status
-                )
+                .labels(ctx.request.method, path, ctx.response.status)
                 .observe((getMicroseconds() - startEpoch) / 1000000);
         }
         httpRequestsTotal
-            .labels(ctx.request.method, ctx.request.path, ctx.response.status)
+            .labels(ctx.request.method, path, ctx.response.status)
             .inc();
     };
 }

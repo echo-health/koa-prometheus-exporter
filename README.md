@@ -82,7 +82,20 @@ Name: httpTimingDisable
 Type: Boolean
 Desciption: turns off tracking HTTP timing information, histograms are expensive and can produce a lot of data.
 e.g. true
-
+```
+```
+Name: pathTransform
+Type: function
+Desciption: Can transform the path before it's set as the URI label. This is important if you're submitting unbounded metrics like rest API's with id's in the path. You need to strip this out to make sure you don't make a very large amount of unique metrics.
+e.g.
+function(path) {
+	if (path && path.includes("/")) {
+		return `/${path.split("/")[1]}`;
+	}
+	return p;
+}
+```
+```
 Name: httpTimingBuckets: 
 Type: Array
 Description: Override the histogram buckets used to track quantiles, this is so you can specify your own bucket configuration. 

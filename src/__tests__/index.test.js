@@ -1,5 +1,9 @@
 const prometheus = require('../index');
 
+beforeEach(() => {
+    prometheus.client.register.clear();
+});
+
 test("Should block any request that isn't a GET", async () => {
     expect.assertions(1);
     const next = jest.fn();
@@ -106,6 +110,47 @@ test('Should track HTTP metrics as a Prometheus histogram', async () => {
     const next = jest.fn();
     const path = '/test';
     await prometheus.httpMetricMiddleware()(
+        {
+            request: {
+                path,
+                method: 'get',
+                length: 1000,
+            },
+            response: {
+                status: 200,
+                length: 1000,
+            },
+            state: {},
+            path,
+        },
+        next
+    );
+    const metricsToExist = {
+        http_server_requests_seconds: prometheus.client.Histogram,
+        http_request_size_bytes: prometheus.client.Summary,
+        http_response_size_bytes: prometheus.client.Summary,
+        http_requests_total: prometheus.client.Counter,
+    };
+    Object.keys(metricsToExist).forEach(k => {
+        const metric = prometheus.client.register.getSingleMetric(k);
+        const metrics = Object.keys(metric.hashMap);
+        expect(metric).toBeInstanceOf(metricsToExist[k]);
+        expect(metrics.length).toBe(1);
+        expect(metrics[0]).toBe('code:200,method:get,uri:/test');
+    });
+});
+
+test('Should track HTTP metrics as a Prometheus histogram and transform the URI', async () => {
+    const next = jest.fn();
+    const path = '/test/1234/get';
+    await prometheus.httpMetricMiddleware({
+        pathTransform: p => {
+            if (p && p.includes('/')) {
+                return `/${p.split('/')[1]}`;
+            }
+            return p;
+        },
+    })(
         {
             request: {
                 path,

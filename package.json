@@ -4,7 +4,7 @@
   "main": "src/index.js",
   "license": "MIT",
   "engines": {
-    "node": ">=6.10.2"
+    "node": ">=8.11.0"
   },
   "scripts": {
     "test": "jest --env node",

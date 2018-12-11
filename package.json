@@ -1,6 +1,6 @@
 {
   "name": "@echo-health/koa-prometheus-exporter",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "src/index.js",
   "license": "MIT",
   "engines": {
@@ -9,7 +9,6 @@
   "scripts": {
     "test": "jest --env node",
     "lint": "eslint .",
-    "postinstall": "nsp check",
     "format": "prettier --write 'src/**/*.js'",
     "format:check": "prettier --list-different 'src/**/*.js'"
   },
@@ -31,7 +30,6 @@
   },
   "dependencies": {
     "debug": "3.1.0",
-    "nsp": "^3.2.1",
     "prom-client": "^10.2.3",
     "prometheus-gc-stats": "^0.5.0"
   },

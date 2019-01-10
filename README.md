@@ -1,14 +1,14 @@
 # koa-prometheus-exporter
 
 
-##Installation
+## Installation
 
 Requires koa to run
 
 Using npm
 
 ```
-npm install @echo-health/koa-prometheus-exporter
+npm install koa-prometheus-exporter
 ```
 
 To use the prometheus middlware the module exports a async middleware function called `middleware`
@@ -63,7 +63,7 @@ app.use(async (ctx, next) => {
 })
 ```
 
-##Tracking HTTP Metrics
+## Tracking HTTP Metrics
 
 If you would like to track HTTP metrics you can add an additional piece of middleware via.
 
@@ -76,7 +76,7 @@ const app = new Koa();
 app.use(prometheus.httpMetricMiddleware());
 app.use(prometheus.middleware());
 ```
-###Options can be passed into the middleware
+### Options can be passed into the middleware
 ```
 Name: httpTimingDisable
 Type: Boolean

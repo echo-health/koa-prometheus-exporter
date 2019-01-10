@@ -1,6 +1,6 @@
 {
-  "name": "@echo-health/koa-prometheus-exporter",
-  "version": "1.0.2",
+  "name": "koa-prometheus-exporter",
+  "version": "1.0.4",
   "main": "src/index.js",
   "license": "MIT",
   "engines": {
@@ -44,13 +44,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:echo-health/koa-prometheus-exporter.git"
+    "url": "git@github.com:charlyx11/koa-prometheus-exporter.git"
   },
-  "author": "Echo",
-  "contributors": [
-    {
-      "name": "Ryan McGrath",
-      "email": "ryan.mcgrath@echo.co.uk"
-    }
-  ]
+  "author": "Charles-Henri GUERIN"
 }

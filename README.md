@@ -1,5 +1,7 @@
 # koa-prometheus-exporter
 
+This is a fork of [@echo-health/koa-prometheus-exporter@1.0.2](https://github.com/echo-health/koa-prometheus-exporter).  
+If you want to know more about this fork, please follow this link: https://github.com/echo-health/koa-prometheus-exporter/pull/9
 
 ## Installation
 

@@ -1,7 +1,8 @@
 # koa-prometheus-exporter
 
+This module export metrics in an HTTP endpoint suitable for prometheus. The endpoint is `/metrics`.
 
-##Installation
+## Installation
 
 Requires koa to run
 
@@ -63,7 +64,7 @@ app.use(async (ctx, next) => {
 })
 ```
 
-##Tracking HTTP Metrics
+## Tracking HTTP Metrics
 
 If you would like to track HTTP metrics you can add an additional piece of middleware via.
 
@@ -76,7 +77,7 @@ const app = new Koa();
 app.use(prometheus.httpMetricMiddleware());
 app.use(prometheus.middleware());
 ```
-###Options can be passed into the middleware
+### Options can be passed into the middleware
 ```
 Name: httpTimingDisable
 Type: Boolean

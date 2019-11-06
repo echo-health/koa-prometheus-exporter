@@ -34,7 +34,7 @@
     "prometheus-gc-stats": "^0.5.1"
   },
   "devDependencies": {
-    "eslint": "^4.7.1",
+    "eslint": "^4.18.2",
     "eslint-config-airbnb-base": "^12.0.0",
     "eslint-config-prettier": "^2.5.0",
     "eslint-plugin-import": "^2.7.0",

@@ -1,7 +1,8 @@
 # koa-prometheus-exporter
 
+This module export metrics in an HTTP endpoint suitable for prometheus. GC node and optionnaly HTTP metrics are exported.
 
-##Installation
+## Installation
 
 Requires koa to run
 
@@ -41,7 +42,7 @@ request has a header in this list
 e.g. ["x-forwarded-for"]
 ```
 
-This intercepts the path /metrics and will export the default [prom-client](https://github.com/siimon/prom-client) metrics for nodejs, plus the additional gc stats via [node-prometheus-gc-stats](https://github.com/SimenB/node-prometheus-gc-stats)
+This intercepts the path `/metrics` and will export the default [prom-client](https://github.com/siimon/prom-client) metrics for nodejs, plus the additional gc stats via [node-prometheus-gc-stats](https://github.com/SimenB/node-prometheus-gc-stats)
 
 if you want to add additional metrics you can access the client in two ways.
 
@@ -63,7 +64,7 @@ app.use(async (ctx, next) => {
 })
 ```
 
-##Tracking HTTP Metrics
+## Tracking HTTP Metrics
 
 If you would like to track HTTP metrics you can add an additional piece of middleware via.
 
@@ -76,7 +77,8 @@ const app = new Koa();
 app.use(prometheus.httpMetricMiddleware());
 app.use(prometheus.middleware());
 ```
-###Options can be passed into the middleware
+
+### Options can be passed into the middleware
 ```
 Name: httpTimingDisable
 Type: Boolean
@@ -99,7 +101,7 @@ function(path) {
 Name: httpTimingBuckets: 
 Type: Array
 Description: Override the histogram buckets used to track quantiles, this is so you can specify your own bucket configuration. 
-Defaault: array produced by calling require('prom-client').exponentialBuckets(0.05, 1.3, 20)
+Default: array produced by calling require('prom-client').exponentialBuckets(0.05, 1.3, 20)
 e.g. [
   0.05,
   0.065,
@@ -124,7 +126,6 @@ e.g. [
 ]
 ```
 
-
 This exposes four metrics: 
 
      - name: http_server_requests_seconds
@@ -137,3 +138,10 @@ This exposes four metrics:
        type: Counter
 
 These mirror the same HTTP metrics exported by the prometheus server itself.
+
+```
+Name: setDefaultLabels
+Type: Array
+Desciption: Add custom label to exported metrics. Useful for running multi instance of an app
+e.g. prometheus.client.register.setDefaultLabels({ taksArn: 'arn' })
+```

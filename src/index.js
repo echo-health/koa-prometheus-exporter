@@ -87,7 +87,15 @@ function httpMetricMiddlewareWrapper(options = {}) {
     }
     return async function httpMetricMiddleware(ctx, next) {
         const startEpoch = getMicroseconds();
-        await next();
+        
+        let error = null;
+        try {
+            await next();
+        } catch(err) {
+            error = err;
+            ctx.status = err.statusCode || err.status || 500;
+        }
+        
         const path = pathTransformFunction(ctx.request.path);
         if (ctx.request.length) {
             httpRequestSizeBytes
@@ -107,6 +115,10 @@ function httpMetricMiddlewareWrapper(options = {}) {
         httpRequestsTotal
             .labels(ctx.request.method, path, ctx.response.status)
             .inc();
+        
+        if (error != null) {
+            throw(error)
+        }
     };
 }
 

@@ -61,7 +61,7 @@ function httpMetricMiddlewareWrapper(options = {}) {
     if (httpTimingEnabled(options)) {
         httpServerRequestsSeconds = new client.Histogram({
             labelNames: ['method', 'uri', 'code'],
-            name: 'http_server_requests_seconds',
+            name: 'http_request_duration_seconds',
             help: 'Duration of HTTP requests in seconds',
             buckets: getBuckets(options),
         });

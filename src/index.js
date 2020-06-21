@@ -50,7 +50,7 @@ function prometheusMetricsExporterWrapper(options = {}) {
 
 function httpMetricMiddlewareWrapper(options = {}) {
     // setup metrics.
-    const labelNames = ['method', 'uri', 'code'];
+    const labelNames = ['status_code', 'method', 'path'];
     const httpRequestsTotal = new client.Counter({
         labelNames,
         name: 'http_requests_total',

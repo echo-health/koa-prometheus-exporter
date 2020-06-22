@@ -50,7 +50,7 @@ function prometheusMetricsExporterWrapper(options = {}) {
 
 function httpMetricMiddlewareWrapper(options = {}) {
     // setup metrics.
-    const labelNames = ['status_code', 'method', 'path'];
+    const labelNames = ['method', 'path', 'status_code'];
     const httpRequestsTotal = new client.Counter({
         labelNames,
         name: 'http_requests_total',
@@ -60,7 +60,7 @@ function httpMetricMiddlewareWrapper(options = {}) {
     let httpServerRequestsSeconds;
     if (httpTimingEnabled(options)) {
         httpServerRequestsSeconds = new client.Histogram({
-            labelNames: ['method', 'uri', 'code'],
+            labelNames: ['method', 'path', 'status_code'],
             name: 'http_request_duration_seconds',
             help: 'Duration of HTTP requests in seconds',
             buckets: getBuckets(options),

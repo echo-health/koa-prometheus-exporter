@@ -18,7 +18,7 @@ e.g.
 
 ```
 const Koa = require('koa');
-const prometheus = require('koa-prometheus-exporter');
+const prometheus = require('@echo-health/koa-prometheus-exporter');
 const app = new Koa();
 
 // middleware is a function that returns the middleware async 
@@ -46,7 +46,7 @@ This intercepts the path `/metrics` and will export the default [prom-client](ht
 
 if you want to add additional metrics you can access the client in two ways.
 
-```const client = require('koa-prometheus-exporter').client;```
+```const client = require('@echo-health/koa-prometheus-exporter').client;```
 
 Is a reference to the underlining prom-client module.
 
@@ -54,7 +54,7 @@ the same client is also exposed via the ctx objet pased through the middleware c
 
 ```
 const Koa = require('koa');
-const prometheus = require('koa-prometheus-exporter');
+const prometheus = require('@echo-health/koa-prometheus-exporter');
 const app = new Koa();
 
 app.use(prometheus.middleware());
@@ -70,7 +70,7 @@ If you would like to track HTTP metrics you can add an additional piece of middl
 
 ```
 const Koa = require('koa');
-const prometheus = require('koa-prometheus-exporter');
+const prometheus = require('@echo-health/koa-prometheus-exporter');
 const app = new Koa();
 
 // this has to be before any other middleware if you want accurate timing of request duration.

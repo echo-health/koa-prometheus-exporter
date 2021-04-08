@@ -180,3 +180,42 @@ test('Should track HTTP metrics as a Prometheus histogram and transform the URI'
         expect(metrics[0]).toBe('code:200,method:get,uri:/test');
     });
 });
+
+test('Should track HTTP metrics as a Prometheus histogram and unclude 2 custom labels', async () => {
+    const next = jest.fn();
+    const path = '/test/1234/get';
+    await prometheus.httpMetricMiddleware({
+        customLabels: {
+            dynamic: ctx => 'dynamic',
+            static: 'static'
+        }
+    })(
+        {
+            request: {
+                path,
+                method: 'get',
+                length: 1000,
+            },
+            response: {
+                status: 200,
+                length: 1000,
+            },
+            state: {},
+            path,
+        },
+        next
+    );
+    const metricsToExist = {
+        http_server_requests_seconds: prometheus.client.Histogram,
+        http_request_size_bytes: prometheus.client.Summary,
+        http_response_size_bytes: prometheus.client.Summary,
+        http_requests_total: prometheus.client.Counter,
+    };
+    Object.keys(metricsToExist).forEach(k => {
+        const metric = prometheus.client.register.getSingleMetric(k);
+        const metrics = Object.keys(metric.hashMap);
+        expect(metric).toBeInstanceOf(metricsToExist[k]);
+        expect(metrics.length).toBe(1);
+        expect(metrics[0]).toBe(`code:200,dynamic:dynamic,method:get,static:static,uri:${path}`);
+    });
+});

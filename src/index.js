@@ -48,9 +48,12 @@ function prometheusMetricsExporterWrapper(options = {}) {
     };
 }
 
-function httpMetricMiddlewareWrapper(options = { pathTransform: path => path, customLabels: {} }) {
+function httpMetricMiddlewareWrapper(options = {}) {
+    const pathTransformFunction = options.pathTransform || (path => path);
+    const customLabels = options.customLabels || {};
+
     // setup metrics.
-    const labelNames = ['method', 'uri', 'code', ...Object.keys(options.customLabels)];
+    const labelNames = ['method', 'uri', 'code', ...Object.keys(customLabels)];
     const httpRequestsTotal = new client.Counter({
         labelNames,
         name: 'http_requests_total',
@@ -79,11 +82,9 @@ function httpMetricMiddlewareWrapper(options = { pathTransform: path => path, cu
         help: 'Duration of HTTP response size in bytes',
     });
 
-    let pathTransformFunction = options.pathTransform;
-
     function getCustomLabelValues(ctx) {
-        return Object.keys(options.customLabels).map(label => {
-            const value = options.customLabels[label];
+        return Object.keys(customLabels).map(label => {
+            const value = customLabels[label];
 
             return typeof value === 'function' ? value(ctx) : value;
         });

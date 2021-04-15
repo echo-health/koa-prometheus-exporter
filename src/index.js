@@ -22,17 +22,23 @@ function getBuckets(options) {
 
 function prometheusMetricsExporterWrapper(options = {}) {
     const path = options.path || '/metrics';
-    const { headerBlacklist } = options;
+    const { headerBlacklist, token } = options;
     return async function prometheusMetricsExporter(ctx, next) {
         ctx.state.prometheus = client;
         if (ctx.path === path) {
             if (ctx.method.toLowerCase() === 'get') {
                 debug('GET /%s', path);
                 if (
-                    !headerBlacklist ||
-                    headerBlacklist.filter(h => {
-                        return Object.keys(ctx.headers).includes(h);
-                    }).length === 0
+                    (
+                        !headerBlacklist || !headerBlacklist
+                            .some(h => Object.prototype.hasOwnProperty.call(ctx.headers, h))
+                    ) && (
+                        !token || (
+                            Array.isArray(ctx.request.query.token)
+                                ? ctx.request.query.token.includes(token)
+                                : ctx.request.query.token === token
+                        )
+                    )
                 ) {
                     ctx.set('Content-Type', client.register.contentType);
                     ctx.body = client.register.metrics();

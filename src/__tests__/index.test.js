@@ -106,6 +106,88 @@ test('Should deny direct connections to /metrics with blacklisted header', async
     }
 });
 
+test('Should deny direct connections to /metrics if token doesnt match', async () => {
+    const next = jest.fn();
+    const token = '12345';
+    expect.assertions(1);
+    try {
+        await prometheus.middleware({
+            token
+        })(
+            {
+                state: {},
+                method: 'get',
+                path: '/metrics',
+                request: {
+                    query: {},
+                },
+                throw: (code, message) => {
+                    throw new Error(message);
+                },
+            },
+            next
+        );
+    } catch (err) {
+        expect(err.message).toBe('Forbidden');
+    }
+});
+
+test('Should return metrics with a single matching token is supplied', async () => {
+    const next = jest.fn();
+    const vals = {};
+    const token = '12345';
+    await prometheus.middleware({
+        token
+    })(
+        {
+            headers: {},
+            state: {},
+            method: 'get',
+            path: '/metrics',
+            request: {
+                query: {
+                    token,
+                },
+            },
+            set: (key, value) => {
+                vals[key] = value;
+            },
+        },
+        next
+    );
+    expect(next.mock.calls.length).toBe(0);
+    expect(Object.keys(vals).includes('Content-Type')).toBe(true);
+    expect(vals['Content-Type']).toBeDefined();
+});
+
+test('Should return metrics when multiple tokens are supplied and one matches', async () => {
+    const next = jest.fn();
+    const vals = {};
+    const token = '12345';
+    await prometheus.middleware({
+        token
+    })(
+        {
+            headers: {},
+            state: {},
+            method: 'get',
+            path: '/metrics',
+            request: {
+                query: {
+                    token: [token, '67890'],
+                },
+            },
+            set: (key, value) => {
+                vals[key] = value;
+            },
+        },
+        next
+    );
+    expect(next.mock.calls.length).toBe(0);
+    expect(Object.keys(vals).includes('Content-Type')).toBe(true);
+    expect(vals['Content-Type']).toBeDefined();
+});
+
 test('Should track HTTP metrics as a Prometheus histogram', async () => {
     const next = jest.fn();
     const path = '/test';
@@ -181,7 +263,7 @@ test('Should track HTTP metrics as a Prometheus histogram and transform the URI'
     });
 });
 
-test('Should track HTTP metrics as a Prometheus histogram and unclude 2 custom labels', async () => {
+test('Should track HTTP metrics as a Prometheus histogram and include 2 custom labels', async () => {
     const next = jest.fn();
     const path = '/test/1234/get';
     await prometheus.httpMetricMiddleware({

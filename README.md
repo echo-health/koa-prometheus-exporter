@@ -40,6 +40,12 @@ Type: Array
 Description: will block any access to the metrics path if the
 request has a header in this list
 e.g. ["x-forwarded-for"]
+
+Name: token:
+Type: String
+Description: will block any access to the metrics path if the
+request url does NOt contain a token query parameter with the same value
+e.g. /metrics?token=123456789
 ```
 
 This intercepts the path `/metrics` and will export the default [prom-client](https://github.com/siimon/prom-client) metrics for nodejs, plus the additional gc stats via [node-prometheus-gc-stats](https://github.com/SimenB/node-prometheus-gc-stats)

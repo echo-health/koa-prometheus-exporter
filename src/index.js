@@ -22,17 +22,23 @@ function getBuckets(options) {
 
 function prometheusMetricsExporterWrapper(options = {}) {
     const path = options.path || '/metrics';
-    const { headerBlacklist } = options;
+    const { headerBlacklist, token } = options;
     return async function prometheusMetricsExporter(ctx, next) {
         ctx.state.prometheus = client;
         if (ctx.path === path) {
             if (ctx.method.toLowerCase() === 'get') {
                 debug('GET /%s', path);
                 if (
-                    !headerBlacklist ||
-                    headerBlacklist.filter(h => {
-                        return Object.keys(ctx.headers).includes(h);
-                    }).length === 0
+                    (
+                        !headerBlacklist || !headerBlacklist
+                            .some(h => Object.prototype.hasOwnProperty.call(ctx.headers, h))
+                    ) && (
+                        !token || (
+                            Array.isArray(ctx.request.query.token)
+                                ? ctx.request.query.token.includes(token)
+                                : ctx.request.query.token === token
+                        )
+                    )
                 ) {
                     ctx.set('Content-Type', client.register.contentType);
                     ctx.body = client.register.metrics();
@@ -49,8 +55,11 @@ function prometheusMetricsExporterWrapper(options = {}) {
 }
 
 function httpMetricMiddlewareWrapper(options = {}) {
+    const pathTransformFunction = options.pathTransform || (path => path);
+    const customLabels = options.customLabels || {};
+
     // setup metrics.
-    const labelNames = ['method', 'uri', 'code'];
+    const labelNames = ['method', 'uri', 'code', ...Object.keys(customLabels)];
     const httpRequestsTotal = new client.Counter({
         labelNames,
         name: 'http_requests_total',
@@ -60,7 +69,7 @@ function httpMetricMiddlewareWrapper(options = {}) {
     let httpServerRequestsSeconds;
     if (httpTimingEnabled(options)) {
         httpServerRequestsSeconds = new client.Histogram({
-            labelNames: ['method', 'uri', 'code'],
+            labelNames,
             name: 'http_server_requests_seconds',
             help: 'Duration of HTTP requests in seconds',
             buckets: getBuckets(options),
@@ -79,33 +88,35 @@ function httpMetricMiddlewareWrapper(options = {}) {
         help: 'Duration of HTTP response size in bytes',
     });
 
-    let pathTransformFunction = path => {
-        return path;
-    };
-    if (options.pathTransform) {
-        pathTransformFunction = options.pathTransform;
+    function getCustomLabelValues(ctx) {
+        return Object.keys(customLabels).map(label => {
+            const value = customLabels[label];
+
+            return typeof value === 'function' ? value(ctx) : value;
+        });
     }
+
     return async function httpMetricMiddleware(ctx, next) {
         const startEpoch = getMicroseconds();
         await next();
         const path = pathTransformFunction(ctx.request.path);
         if (ctx.request.length) {
             httpRequestSizeBytes
-                .labels(ctx.request.method, path, ctx.response.status)
+                .labels(ctx.request.method, path, ctx.response.status, ...getCustomLabelValues(ctx))
                 .observe(ctx.request.length);
         }
         if (ctx.response.length) {
             httpResponseSizeBytes
-                .labels(ctx.request.method, path, ctx.response.status)
+                .labels(ctx.request.method, path, ctx.response.status, ...getCustomLabelValues(ctx))
                 .observe(ctx.response.length);
         }
         if (httpTimingEnabled(options)) {
             httpServerRequestsSeconds
-                .labels(ctx.request.method, path, ctx.response.status)
+                .labels(ctx.request.method, path, ctx.response.status, ...getCustomLabelValues(ctx))
                 .observe((getMicroseconds() - startEpoch) / 1000000);
         }
         httpRequestsTotal
-            .labels(ctx.request.method, path, ctx.response.status)
+            .labels(ctx.request.method, path, ctx.response.status, ...getCustomLabelValues(ctx))
             .inc();
     };
 }

@@ -21,7 +21,7 @@ const Koa = require('koa');
 const prometheus = require('@echo-health/koa-prometheus-exporter');
 const app = new Koa();
 
-// middleware is a function that returns the middleware async 
+// middleware is a function that returns the middleware async
 // function, this is so you can pass configuration settings into
 // the middleware.
 app.use(prometheus.middleware({}));
@@ -35,11 +35,17 @@ Type: String
 Desciption: overrides the path the middleware listens on.
 e.g. "/overriden_path_to_export_metrics_on
 
-Name: headerBlacklist: 
+Name: headerBlacklist:
 Type: Array
 Description: will block any access to the metrics path if the
 request has a header in this list
 e.g. ["x-forwarded-for"]
+
+Name: token:
+Type: String
+Description: will block any access to the metrics path if the
+request url does NOt contain a token query parameter with the same value
+e.g. /metrics?token=123456789
 ```
 
 This intercepts the path `/metrics` and will export the default [prom-client](https://github.com/siimon/prom-client) metrics for nodejs, plus the additional gc stats via [node-prometheus-gc-stats](https://github.com/SimenB/node-prometheus-gc-stats)
@@ -98,9 +104,19 @@ function(path) {
 }
 ```
 ```
-Name: httpTimingBuckets: 
+Name: customLabels
+Type: object
+Desciption: allows adding additional labels to the collected metrics. Supports both static and dynamic label values. The function provided to determine the dynamic value gets the ctx object as argument
+e.g.
+{
+  labelWithAStaticValue: 'thisIsStatic',
+  labelWithAdynamicValue: ctx => Math.random(),
+}
+```
+```
+Name: httpTimingBuckets:
 Type: Array
-Description: Override the histogram buckets used to track quantiles, this is so you can specify your own bucket configuration. 
+Description: Override the histogram buckets used to track quantiles, this is so you can specify your own bucket configuration.
 Default: array produced by calling require('prom-client').exponentialBuckets(0.05, 1.3, 20)
 e.g. [
   0.05,
@@ -126,7 +142,7 @@ e.g. [
 ]
 ```
 
-This exposes four metrics: 
+This exposes four metrics:
 
      - name: http_server_requests_seconds
        type: Histogram
